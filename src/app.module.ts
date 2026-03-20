@@ -3,6 +3,8 @@ import { CoreModule } from './core/core.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DatabaseConfig } from './config/db.config';
+import { UpdatesController } from './updates/updates.controller';
+import { UpdatesService } from './updates/updates.service';
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { DatabaseConfig } from './config/db.config';
       }),
     }),
   ],
-  controllers: [],
-  providers: [],
+  controllers: [UpdatesController],
+  providers: [UpdatesService],
 })
 export class AppModule {}
