@@ -33,6 +33,7 @@
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "googleapis": "^171.4.0",
     "mongoose": "^9.3.0",
     "nest-winston": "^1.10.2",
     "passport": "^0.7.0",
