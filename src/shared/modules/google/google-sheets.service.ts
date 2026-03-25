@@ -54,7 +54,7 @@ export class GoogleSheetsService {
                     },
                 });
 
-                this.logger.log(`[Google Sheets] Updated PDV version for ${payload.name} (Device ID: ${payload.deviceName}) to ${payload.version} at row ${excelRow}`);
+                this.logger.log(`[Google Sheets] Updated PDV version for ${payload.name} (Device name: ${payload.deviceName}) to ${payload.version} at row ${excelRow}`);
             } else {
                 await this.sheets.spreadsheets.values.append({
                     spreadsheetId: this.spreadsheetId,
@@ -67,10 +67,10 @@ export class GoogleSheetsService {
                 });
 
                 await this.sortSheet();
-                this.logger.log(`[Google Sheets] Added new entry for ${payload.name} (Device ID: ${payload.deviceName}) with version ${payload.version}`);
+                this.logger.log(`[Google Sheets] Added new entry for ${payload.name} (Device name: ${payload.deviceName}) with version ${payload.version}`);
             }
         } catch (error) {
-            this.logger.error(`[Google Sheets] Error updating PDV version for ${payload.name} (Device ID: ${payload.deviceName}): ${error.message}`);
+            this.logger.error(`[Google Sheets] Error updating PDV version for ${payload.name} (Device name: ${payload.deviceName}): ${error.message}`);
         }
     }
 

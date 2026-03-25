@@ -17,8 +17,7 @@ export class UpdateController {
 
     @Get('download')
     @UseGuards(AuthGuard ('jwt'))
-    downloadFile(@CurrentUser() user, @Body() deviceName){
-
+    downloadFile(@CurrentUser() user, @Body('deviceName') deviceName){
         const dto = {
             userId: user.sub,
             deviceId: user.device,

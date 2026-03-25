@@ -19,7 +19,7 @@ export class UpdateService {
         this.filePath = join(process.cwd(), 'files', 'PdvFX.exe');
     }
 
-    public getLastestVersionFile() {
+    public getLastestVersionFile(): string {
 
         const info = winVersionInfo(this.filePath);
         return info.FileVersion;  
@@ -50,7 +50,7 @@ export class UpdateService {
 
         const payloadSheet = {
             name: dto.name,
-            deviceName: deviceName,
+            deviceName,
             version: version,
         };
 
