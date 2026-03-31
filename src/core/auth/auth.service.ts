@@ -31,7 +31,8 @@ export class AuthService {
         const payload = {
             userId: user.id,
             deviceId: dto.deviceId,
-            name: dto.name
+            name: dto.name,
+            cnpj: user.cnpj
         }
 
         return this.generateAndSaveTokens(payload, dto.deviceName);
@@ -58,7 +59,8 @@ export class AuthService {
         const payload = {
             userId: user.id,
             deviceId: dto.deviceId,
-            name: user.name
+            name: user.name,
+            cnpj: user.cnpj
         }
 
         return this.generateAndSaveTokens(payload, authEntity.deviceName);

@@ -24,6 +24,9 @@ export class GoogleSheetsService {
 
         this.spreadsheetId = this.configService.get<string>('GOOGLE_SHEET_ID');
         this.sheetName = this.configService.get<string>('GOOGLE_SHEET_NAME');
+
+        if (!this.spreadsheetId) throw new Error('Invalid sheetId env variable');
+        if (!this.sheetName) throw new Error('Invalid sheetName env variable');
     }
 
     private readonly sheetId = 0;
@@ -34,11 +37,11 @@ export class GoogleSheetsService {
         try {
             const getResponse = await this.sheets.spreadsheets.values.get({
                 spreadsheetId: this.spreadsheetId,
-                range: `${this.sheetName}!A:B`,
+                range: `${this.sheetName}!A:C`,
             });
 
             const rows = getResponse.data.values || [];
-            const rowIndex = rows.findIndex(row => row[0] === payload.name && row[1] === payload.deviceName);
+            const rowIndex = rows.findIndex(row => row[0] === payload.name && row[1] === payload.cnpj && row[2] === payload.deviceName);
             const timeStamp = new Date().toLocaleDateString("pt-BR");
 
             if (rowIndex !== -1) {
@@ -47,30 +50,30 @@ export class GoogleSheetsService {
 
                 await this.sheets.spreadsheets.values.update({
                     spreadsheetId: this.spreadsheetId,
-                    range: `${this.sheetName}!C${excelRow}:D${excelRow}`,
+                    range: `${this.sheetName}!D${excelRow}:E${excelRow}`,
                     valueInputOption: 'USER_ENTERED',
                     requestBody: {
                         values: [[payload.version, timeStamp]],
                     },
                 });
 
-                this.logger.log(`[Google Sheets] Updated PDV version for ${payload.name} (Device name: ${payload.deviceName}) to ${payload.version} at row ${excelRow}`);
+                this.logger.log(`[Google Sheets] Updated PDV version for ${payload.name} - ${payload.cnpj} (Device name: ${payload.deviceName}) to ${payload.version} at row ${excelRow}`);
             } else {
                 await this.sheets.spreadsheets.values.append({
                     spreadsheetId: this.spreadsheetId,
-                    range: `${this.sheetName}!A:D`,
+                    range: `${this.sheetName}!A:E`,
                     valueInputOption: 'USER_ENTERED',
                     insertDataOption: 'INSERT_ROWS',
                     requestBody: {
-                        values: [[payload.name, payload.deviceName, payload.version, timeStamp]],
+                        values: [[payload.name, payload.cnpj, payload.deviceName, payload.version, timeStamp]],
                     },
                 });
 
                 await this.sortSheet();
-                this.logger.log(`[Google Sheets] Added new entry for ${payload.name} (Device name: ${payload.deviceName}) with version ${payload.version}`);
+                this.logger.log(`[Google Sheets] Added new entry for ${payload.name} - ${payload.cnpj} (Device name: ${payload.deviceName}) with version ${payload.version}`);
             }
         } catch (error) {
-            this.logger.error(`[Google Sheets] Error updating PDV version for ${payload.name} (Device name: ${payload.deviceName}): ${error.message}`);
+            this.logger.error(`[Google Sheets] Error updating PDV version for ${payload.name} - ${payload.cnpj} (Device name: ${payload.deviceName}): ${error.message}`);
         }
     }
 

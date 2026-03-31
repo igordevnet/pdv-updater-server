@@ -23,6 +23,7 @@ export class TokenService {
         sub: payload.userId,
         device: payload.deviceId,
         name: payload.name,
+        cnpj: payload.cnpj
       },
       {
         expiresIn: 60 * 15,

@@ -58,8 +58,9 @@ export class UserService {
         if (!user) return null;
 
         const secureUser = {
-            _id: user._id,
+            id: user.id,
             name: user.name,
+            cnpj: user.cnpj
         }
 
         await this.cacheManager.set(cacheKey, secureUser, 300000);

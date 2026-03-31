@@ -21,8 +21,10 @@ export class UpdateController {
     @ApiResponse({ status: 404, description: 'File not found' })
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard('jwt'))
-    public checkVersion(): Promise<Version> {
-        return this.updateService.getLastestVersionFile()
+    public checkVersion(@CurrentUser() user): Promise<Version> {
+        const cnpj = user.cnpj; 
+
+        return this.updateService.getLastestVersionFile(cnpj);
     };
 
     @Get('/download')
@@ -33,8 +35,10 @@ export class UpdateController {
     @ApiResponse({ status: 404, description: 'File not found' })
     @HttpCode(HttpStatus.OK)
     @UseGuards(AuthGuard('jwt'))
-    public downloadFile() {
-        return this.updateService.getLastestFile();
+    public downloadFile(@CurrentUser() user) {
+        const cnpj = user.cnpj;
+
+        return this.updateService.getLastestFile(cnpj);
     };
 
     @Post('/save')
@@ -49,6 +53,7 @@ export class UpdateController {
             userId: user.sub,
             deviceId: user.device,
             name: user.name,
+            cnpj: user.cnpj
         }
         return this.updateService.saveAndExport(sheetDto, dto.deviceName);
     };

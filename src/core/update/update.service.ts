@@ -1,5 +1,5 @@
-import { Inject, Injectable, StreamableFile } from '@nestjs/common';
-import { createReadStream } from 'fs';
+import { Inject, Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
+import { createReadStream, existsSync } from 'fs';
 import { join } from 'path';
 import winVersionInfo from 'win-version-info';
 import { SaveUpdateDTO } from './dtos/save-update.dto';
@@ -8,32 +8,43 @@ import { GoogleSheetsService } from '../../shared/modules/google/google-sheets.s
 import type { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Version } from 'src/shared/types/version-response.type';
+import { ConfigService } from '@nestjs/config';
 
 
 @Injectable()
 export class UpdateService {
 
-    private readonly filePath;
+    private readonly folderPath;
 
     public constructor(
-        private readonly updateRepository: UpdateRepository, 
+        private readonly updateRepository: UpdateRepository,
         private readonly googleSheetsService: GoogleSheetsService,
+        private readonly configService: ConfigService,
         @Inject(CACHE_MANAGER) private cacheManager: Cache
-    ) {
-        this.filePath = join(process.cwd(), 'files', 'PdvFX.exe');
+    ) { 
+        this.folderPath = this.configService.get<string>('FOLDER_PATH');
     }
 
-    public async getLastestVersionFile(): Promise<Version> {
-        const cacheKey = 'version_file';
+    public async getLastestVersionFile(cnpj: string): Promise<Version> {
+        const cacheKey = `version_file_${cnpj}`;
 
         const cachedVersion = await this.cacheManager.get<string>(cacheKey);
-        if(cachedVersion) {
+        if (cachedVersion) {
             return {
                 version: cachedVersion,
             };
         }
 
-        const info = await winVersionInfo(this.filePath);
+        const filePath = this.getUrl(cnpj);
+
+        if (!existsSync(filePath)) {
+            throw new NotFoundException(`File not found for Cnpj: ${cnpj}`);
+        }
+
+        const info = await winVersionInfo(filePath);
+
+        if (!info.FileVersion) throw new NotFoundException('Not found');
+        console.log(info.FileVersion);
         await this.cacheManager.set(cacheKey, info.FileVersion, 300000);
 
         return {
@@ -41,9 +52,15 @@ export class UpdateService {
         };
     }
 
-    public async getLastestFile() {
+    public async getLastestFile(cnpj: string) {
 
-        const fileStream = createReadStream(this.filePath);
+        const filePath = this.getUrl(cnpj);
+
+        if (!existsSync(filePath)) {
+            throw new NotFoundException(`File not found for Cnpj: ${cnpj}`);
+        }
+
+        const fileStream = createReadStream(filePath);
 
         return new StreamableFile(fileStream, {
             type: 'application/octet-stream',
@@ -52,8 +69,8 @@ export class UpdateService {
     }
 
     public async saveAndExport(dto: SaveUpdateDTO, deviceName: string) {
-        const version = await this.getLastestVersionFile();
-        
+        const version = await this.getLastestVersionFile(dto.cnpj);
+
         const payload = {
             userId: dto.userId,
             deviceId: dto.deviceId,
@@ -62,9 +79,9 @@ export class UpdateService {
 
         const instanceCompare = await this.updateRepository.getInstanceByDevice(dto.deviceId);
 
-        if(!instanceCompare) {
+        if (!instanceCompare) {
             await this.updateRepository.createInstance(payload);
-        } 
+        }
         else {
             await this.updateRepository.updateInstance(payload);
         }
@@ -73,8 +90,15 @@ export class UpdateService {
             name: dto.name,
             deviceName,
             version: version.version,
+            cnpj: dto.cnpj
         };
 
         await this.googleSheetsService.updatePdvVersion(payloadSheet);
+    }
+
+    private getUrl(cnpj: string) {
+        if (!this.folderPath) throw new Error('Invalid Folder env variable')
+
+        return join(this.folderPath, cnpj, 'PdvFX.exe');
     }
 }
