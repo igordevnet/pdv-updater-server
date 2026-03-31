@@ -60,6 +60,7 @@ export class UserService {
         const secureUser = {
             id: user.id,
             name: user.name,
+            cnpj: user.cnpj
         }
 
         await this.cacheManager.set(cacheKey, secureUser, 300000);
